@@ -7,7 +7,8 @@ const CRGB USE_COLORS[] = {
     CRGB::Red,
     CRGB::Green,
     CRGB::Yellow,
-    CRGB::Pink
+    CRGB::Pink,
+    CRGB::Turquoise
 };
 
 #define USE_COLORS_LEN sizeof(USE_COLORS) / sizeof((USE_COLORS)[0])

@@ -12,6 +12,7 @@ OneButton btn(BUTTON_PIN, false, false);
 EventHandler handler(&lamp, &btn);
 void setup()
 {
+    Serial.begin(9600);
 }
 
 void loop()
