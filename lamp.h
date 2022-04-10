@@ -2,6 +2,16 @@
 #define LAMP_HPP_INCLUDED
 #include <FastLED.h>
 #include <stdint.h>
+
+const CRGB USE_COLORS[] = {
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Yellow,
+    CRGB::Pink
+};
+
+#define USE_COLORS_LEN sizeof(USE_COLORS) / sizeof((USE_COLORS)[0])
+
 template <int num_leds, int pin>
 class Lamp {
     private:
@@ -10,24 +20,27 @@ class Lamp {
         void redraw();
         bool power;
         uint8_t brightness;
+        uint8_t current_color;
 
     public:
         Lamp();
 
         void set_brightness(uint8_t);
-        void set_color();
+        void set_color(CRGB);
         void poweroff();
         void poweron();
         void toggle_power();
         void cycle_brightness();
+        void cycle_colors();
 
 };
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::redraw()
+void Lamp<num_leds, pin>::redraw()
 {
     FastLED.setBrightness(brightness);
     for (uint8_t i = 0; i < num_leds; ++i) {
+        leds[i] = USE_COLORS[current_color];
         raw_leds[i] = leds[i];
     }
     FastLED.show();
@@ -35,27 +48,27 @@ Lamp<num_leds, pin>::redraw()
 
 template <int num_leds, int pin>
 Lamp<num_leds, pin>::Lamp()
-    : power(false), brightness(0)
+    : power(false), brightness(0), current_color(0)
 {
     FastLED.addLeds<WS2812B, pin, GRB>(leds, num_leds);
 }
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::set_brightness(uint8_t brightness)
+void Lamp<num_leds, pin>::set_brightness(uint8_t brightness)
 {
-    this->brightness = brithness;
+    brightness = brightness;
     redraw();
 }
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::set_color(CRGB color)
+void Lamp<num_leds, pin>::set_color(CRGB color)
 {
     fill_solid(leds, num_leds, color);
-    this->redraw();
+    redraw();
 }
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::poweroff()
+void Lamp<num_leds, pin>::poweroff()
 {
     FastLED.clear();
     FastLED.show();
@@ -63,27 +76,35 @@ Lamp<num_leds, pin>::poweroff()
 }
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::poweron()
+void Lamp<num_leds, pin>::poweron()
 {
     redraw();
     power = true;
 }
 
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::toggle_power()
+void Lamp<num_leds, pin>::toggle_power()
 {
     if (power)
-        this->poweroff();
+        poweroff();
     else
-        this->poweroff();
+        poweroff();
 
     power = !power;
 }
         
 template <int num_leds, int pin>
-Lamp<num_leds, pin>::cycle_brightness()
+void Lamp<num_leds, pin>::cycle_brightness()
 {
-    ++this->brightness; //it is unsigned
+    ++brightness; //it is unsigned
+    redraw();
+}
+
+template <int num_leds, int pin>
+void Lamp<num_leds, pin>::cycle_colors()
+{
+    ++current_color;
+    current_color %= USE_COLORS_LEN;
     redraw();
 }
 
