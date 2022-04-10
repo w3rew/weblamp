@@ -6,7 +6,7 @@
 #include <OneButton.h>
 
 #ifndef LONG_PRESS_COOLDOWN
-#define LONG_PRESS_COOLDOWN 100 //in ms
+#define LONG_PRESS_COOLDOWN 10 //in ms
 #endif
 
 template <int num_leds, int led_pin>

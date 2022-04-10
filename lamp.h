@@ -48,7 +48,7 @@ void Lamp<num_leds, pin>::redraw()
 
 template <int num_leds, int pin>
 Lamp<num_leds, pin>::Lamp()
-    : power(false), brightness(0), current_color(0)
+    : power(false), brightness(255), current_color(0)
 {
     FastLED.addLeds<WS2812B, pin, GRB>(leds, num_leds);
 }
@@ -88,9 +88,8 @@ void Lamp<num_leds, pin>::toggle_power()
     if (power)
         poweroff();
     else
-        poweroff();
+        poweron();
 
-    power = !power;
 }
         
 template <int num_leds, int pin>
