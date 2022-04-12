@@ -110,10 +110,13 @@ void SharedLamp<num_leds, pin>::tick()
     this->dump(&state);
 
     if (!this->send_state(&state))
-        return;
+        goto FIN_CONN;
 
     if (!this->receive_state(&state))
-        return;
+        goto FIN_CONN;
+
     this->load(&state);
+FIN_CONN:
+    this->server.stop();
 }
 #endif
