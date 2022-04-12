@@ -15,7 +15,7 @@ const CRGB USE_COLORS[] = {
 
 template <int num_leds, int pin>
 class Lamp {
-    private:
+    protected:
         CRGB leds[num_leds];
         CRGB raw_leds[num_leds];
         void redraw();
@@ -44,6 +44,8 @@ void Lamp<num_leds, pin>::redraw()
         leds[i] = USE_COLORS[current_color];
         raw_leds[i] = leds[i];
     }
+    if (!power)
+        power = true;
     FastLED.show();
 }
 

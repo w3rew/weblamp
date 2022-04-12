@@ -3,12 +3,117 @@
 #include <stdint.h>
 #include <ESP8266WiFi.h>
 #include "lamp.h"
+#define TIMEOUT 3000 //millis
+#define wait(x) while(!(x)) {if (millis() - transfer_start > TIMEOUT) return false;}
+
+struct LampState
+{
+    uint8_t power; //bool actually
+    uint8_t color;
+};
+
+union host_t
+{
+    uint32_t num;
+    char arr[4];
+};
 
 template <int num_leds, int pin>
 class SharedLamp : public Lamp<num_leds, pin>
 {
-    public:
-        void tick() {};
+    private:
+        WiFiClient server;
+        unsigned long transfer_start;
+        host_t host;
+        uint16_t port;
 
+
+    public:
+        void tick();
+        SharedLamp(const char* wifi_ssid,
+                const char* password,
+                host_t host,
+                uint16_t port);
+
+        void dump(LampState* state);
+        bool load(const LampState* state);
+        bool send_state(const LampState* state);
+        bool receive_state(LampState* state);
 };
+
+template <int num_leds, int pin>
+SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid, const char* password, host_t host, uint16_t port)
+    : host(host), port(port), Lamp<num_leds, pin>()
+{
+    this->poweron(); //First color is red
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(wifi_ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+        delay(100);
+    this->cycle_colors(); //Second color is green
+}
+
+
+template <int num_leds, int pin>
+void SharedLamp<num_leds, pin>::dump(LampState* state)
+{
+    state->power = this->power;
+    state->color = this->current_color;
+}
+
+template <int num_leds, int pin>
+bool SharedLamp<num_leds, pin>::load(const LampState* state)
+{
+    if (state->color < USE_COLORS_LEN) {
+        this->power = state->power;
+        this->current_color = state->color;
+        return true;
+    }
+    return false;
+}
+
+template <int num_leds, int pin>
+bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
+{
+    transfer_start = millis();
+    this->server.flush();
+
+    wait(this->server.connect(host.arr, port));
+
+    this->server.write(state->power);
+    this->server.write(state->color);
+
+    return true;
+}
+
+template <int num_leds, int pin>
+bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
+{
+    transfer_start = millis();
+
+    wait(this->server.available());
+    state->power = this->server.read();
+
+    wait(this->server.available());
+    state->color = this->server.read();
+
+    return true;
+
+}
+
+
+template <int num_leds, int pin>
+void SharedLamp<num_leds, pin>::tick()
+{
+    LampState state;
+
+    this->dump(&state);
+
+    if (!this->send_state(&state))
+        return;
+
+    if (!this->receive_state(&state))
+        return;
+    this->load(&state);
+}
 #endif
