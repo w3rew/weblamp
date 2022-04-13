@@ -16,7 +16,7 @@ EventHandler handler(&lamp, &btn);
 void setup()
 {
     Serial.begin(9600);
-    lamp = SharedLamp<LED_NUM, LED_PIN>("MGTS_GPON_2686", "9166757418%9150115290", host, port);
+    //lamp = SharedLamp<LED_NUM, LED_PIN>("MGTS_GPON_2686", "9166757418%9150115290", host, port);
 }
 
 void loop()
