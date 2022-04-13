@@ -15,7 +15,7 @@ struct LampState
 union host_t
 {
     uint32_t num;
-    char arr[4];
+    uint8_t arr[4];
 };
 
 template <int num_leds, int pin>
@@ -30,6 +30,7 @@ class SharedLamp : public Lamp<num_leds, pin>
 
     public:
         void tick();
+        SharedLamp() {};
         SharedLamp(const char* wifi_ssid,
                 const char* password,
                 host_t host,
@@ -48,8 +49,13 @@ SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid, const char* passwor
     this->poweron(); //First color is red
     WiFi.mode(WIFI_STA);
     WiFi.begin(wifi_ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-        delay(100);
+    while (WiFi.status() != WL_CONNECTED) {
+#ifdef DEBUG
+        Serial.println("Connecting");
+#endif
+        delay(1000);
+    }
+    Serial.println("Connected!");
     this->cycle_colors(); //Second color is green
 }
 
@@ -78,11 +84,15 @@ bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
     transfer_start = millis();
     this->server.flush();
 
+    Serial.println("Send state");
     wait(this->server.connect(host.arr, port));
+    //wait(this->server.connect({100, 111, 251, 167}, 1348));
 
     this->server.write(state->power);
     this->server.write(state->color);
 
+
+    Serial.println("Sent state");
     return true;
 }
 
@@ -97,6 +107,7 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
     wait(this->server.available());
     state->color = this->server.read();
 
+    Serial.println("Receive state");
     return true;
 
 }
@@ -105,15 +116,20 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
 template <int num_leds, int pin>
 void SharedLamp<num_leds, pin>::tick()
 {
+    Serial.println("Tick!");
     LampState state;
 
     this->dump(&state);
 
-    if (!this->send_state(&state))
+    if (!this->send_state(&state)) {
+        Serial.println("Failed to send state!");
         goto FIN_CONN;
+    }
 
-    if (!this->receive_state(&state))
+    if (!this->receive_state(&state)) {
+        Serial.println("Failed to receive state!");
         goto FIN_CONN;
+    }
 
     this->load(&state);
 FIN_CONN:
