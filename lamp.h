@@ -39,15 +39,21 @@ class Lamp {
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::redraw()
 {
+    if (!power)
+        return;
+
     Serial.print("Redraw: ");
     Serial.println(current_color);
     FastLED.setBrightness(brightness);
     for (uint8_t i = 0; i < num_leds; ++i) {
         leds[i] = USE_COLORS[current_color];
         raw_leds[i] = leds[i];
+        Serial.print(raw_leds[i].r);
+        Serial.print(" ");
+        Serial.print(raw_leds[i].g);
+        Serial.print(" ");
+        Serial.println(raw_leds[i].b);
     }
-    if (!power)
-        power = true;
     FastLED.show();
 }
 
@@ -55,7 +61,7 @@ template <int num_leds, int pin>
 Lamp<num_leds, pin>::Lamp()
     : power(false), brightness(255), current_color(0)
 {
-    FastLED.addLeds<WS2812B, pin, GRB>(leds, num_leds);
+    FastLED.addLeds<WS2812B, pin, GRB>(raw_leds, num_leds);
 }
 
 template <int num_leds, int pin>
