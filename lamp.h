@@ -39,6 +39,8 @@ class Lamp {
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::redraw()
 {
+    Serial.print("Redraw: ");
+    Serial.println(current_color);
     FastLED.setBrightness(brightness);
     for (uint8_t i = 0; i < num_leds; ++i) {
         leds[i] = USE_COLORS[current_color];

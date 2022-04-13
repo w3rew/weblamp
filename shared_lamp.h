@@ -73,8 +73,13 @@ template <int num_leds, int pin>
 bool SharedLamp<num_leds, pin>::load(const LampState* state)
 {
     if (state->color < USE_COLORS_LEN) {
+        Serial.print("Load: ");
+        Serial.print(state->power);
+        Serial.print(" ");
+        Serial.println(state->color);
         this->power = state->power;
         this->current_color = state->color;
+        this->redraw();
         return true;
     }
     return false;
