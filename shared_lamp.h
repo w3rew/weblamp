@@ -3,8 +3,9 @@
 #include <stdint.h>
 #include <ESP8266WiFi.h>
 #include "lamp.h"
-#define TIMEOUT 3000 //millis
-#define wait(x) while(!(x)) {if (millis() - transfer_start > TIMEOUT) return false;}
+#define TIMEOUT_TICK 3000 //millis
+#define TIMEOUT_INET 3000 //millis
+#define wait(x) while(!(x)) {if (millis() - transfer_start > TIMEOUT_INET) return false;}
 
 struct LampState
 {
@@ -24,6 +25,7 @@ class SharedLamp : public Lamp<num_leds, pin>
     private:
         WiFiClient server;
         unsigned long transfer_start;
+        unsigned long previous_tick;
         host_t host;
         uint16_t port;
 
@@ -44,7 +46,7 @@ class SharedLamp : public Lamp<num_leds, pin>
 
 template <int num_leds, int pin>
 SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid, const char* password, host_t host, uint16_t port)
-    : host(host), port(port), Lamp<num_leds, pin>()
+    : host(host), port(port), previous_tick(0), Lamp<num_leds, pin>()
 {
     this->poweron(); //First color is red
     WiFi.mode(WIFI_STA);
@@ -116,6 +118,9 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
 template <int num_leds, int pin>
 void SharedLamp<num_leds, pin>::tick()
 {
+    if (millis() - previous_tick < TIMEOUT_TICK)
+        return;
+
     Serial.println("Tick!");
     LampState state;
 
@@ -134,5 +139,7 @@ void SharedLamp<num_leds, pin>::tick()
     this->load(&state);
 FIN_CONN:
     this->server.stop();
+
+    previous_tick = millis();
 }
 #endif
