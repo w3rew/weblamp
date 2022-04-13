@@ -22,7 +22,7 @@ class EventHandler
         void key_clicked();
         void key_double_click();
         void key_long_press_start();
-
+        EventHandler() {};
         EventHandler(SharedLamp<num_leds, led_pin>* lamp, OneButton* btn);
         void tick();
 };
