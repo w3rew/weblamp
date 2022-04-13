@@ -50,6 +50,7 @@ void EventHandler<num_leds, led_pin>::tick()
 template <int num_leds, int led_pin>
 void EventHandler<num_leds, led_pin>::key_clicked()
 {
+    Serial.println("Clicked!");
     lamp->cycle_colors();
 }
 
@@ -72,6 +73,7 @@ void EventHandler<num_leds, led_pin>::key_long_press_start()
 template <int num_leds, int led_pin>
 void EventHandler<num_leds, led_pin>::key_double_click()
 {
+    Serial.println("Double clicked!");
     lamp->toggle_power();
 }
 

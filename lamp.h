@@ -81,6 +81,7 @@ void Lamp<num_leds, pin>::set_color(CRGB color)
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::poweroff()
 {
+    Serial.println("Poweroff");
     FastLED.clear();
     FastLED.show();
     power = false;
@@ -89,8 +90,9 @@ void Lamp<num_leds, pin>::poweroff()
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::poweron()
 {
-    redraw();
+    Serial.println("Poweron");
     power = true;
+    redraw();
 }
 
 template <int num_leds, int pin>
@@ -113,6 +115,7 @@ void Lamp<num_leds, pin>::cycle_brightness()
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::cycle_colors()
 {
+    Serial.println("Cycle colors!");
     ++current_color;
     current_color %= USE_COLORS_LEN;
     redraw();
