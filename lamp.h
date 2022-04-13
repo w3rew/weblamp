@@ -89,8 +89,8 @@ void Lamp<num_leds, pin>::poweroff()
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::poweron()
 {
-    redraw();
     power = true;
+    redraw();
 }
 
 template <int num_leds, int pin>
