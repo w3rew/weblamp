@@ -85,9 +85,13 @@ bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
     transfer_start = millis();
     this->server.flush();
 
-    Serial.println("Send state");
-    wait(this->server.connect(host.arr, port));
-    //wait(this->server.connect({100, 111, 251, 167}, 1348));
+    Serial.println("Trying to send state");
+    if (!this->server.connected()) {
+        Serial.println("Not connected, will connect and retry again");
+        this->server.connect(host.arr, port);
+        return false;
+    }
+
 
     this->server.write(state->power);
     this->server.write(state->color);
@@ -102,7 +106,7 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
 {
     transfer_start = millis();
 
-    wait(this->server.available());
+    wait(this->server.available()); //TODO: maybe rewrite this
     state->power = this->server.read();
 
     wait(this->server.available());
