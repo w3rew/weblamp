@@ -28,6 +28,7 @@ class SharedLamp : public Lamp<num_leds, pin>
         unsigned long previous_tick;
         host_t host;
         uint16_t port;
+        bool connected;
 
 
     public:
@@ -46,19 +47,12 @@ class SharedLamp : public Lamp<num_leds, pin>
 
 template <int num_leds, int pin>
 SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid, const char* password, host_t host, uint16_t port)
-    : host(host), port(port), previous_tick(0), Lamp<num_leds, pin>()
+    : host(host), port(port), previous_tick(0), connected(false), Lamp<num_leds, pin>()
 {
+    this->set_color(CRGB::Red);
     this->poweron(); //First color is red
     WiFi.mode(WIFI_STA);
     WiFi.begin(wifi_ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-#ifdef DEBUG
-        Serial.println("Connecting");
-#endif
-        delay(1000);
-    }
-    Serial.println("Connected!");
-    this->cycle_colors(); //Second color is green
 }
 
 
@@ -126,7 +120,19 @@ void SharedLamp<num_leds, pin>::tick()
     if (millis() - previous_tick < TIMEOUT_TICK)
         return;
 
+    previous_tick = millis();
     Serial.println("Tick!");
+    Serial.print("Wifi status: ");
+    Serial.println(WiFi.status());
+
+
+    if (WiFi.status() == WL_CONNECTED) {
+        if (!connected) {
+            this->set_color(CRGB::Green);
+            connected = true;
+        }
+    } else
+        return;
     LampState state;
 
     this->dump(&state);
@@ -145,6 +151,5 @@ void SharedLamp<num_leds, pin>::tick()
 FIN_CONN:
     this->server.stop();
 
-    previous_tick = millis();
 }
 #endif

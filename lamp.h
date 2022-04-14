@@ -1,5 +1,6 @@
 #ifndef LAMP_HPP_INCLUDED
 #define LAMP_HPP_INCLUDED
+#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #include <stdint.h>
 
