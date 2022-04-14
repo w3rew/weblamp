@@ -9,6 +9,7 @@
 
 struct LampState
 {
+    uint64_t key;
     uint8_t power; //bool actually
     uint8_t color;
 };
@@ -29,15 +30,17 @@ class SharedLamp : public Lamp<num_leds, pin>
         host_t host;
         uint16_t port;
         bool connected;
+        uint64_t key;
 
 
     public:
         void tick();
         SharedLamp() {};
         SharedLamp(const char* wifi_ssid,
-                const char* password,
+                const char* wifi_password,
                 host_t host,
-                uint16_t port);
+                uint16_t port,
+                uint64_t key);
 
         void dump(LampState* state);
         bool load(const LampState* state);
@@ -46,19 +49,32 @@ class SharedLamp : public Lamp<num_leds, pin>
 };
 
 template <int num_leds, int pin>
-SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid, const char* password, host_t host, uint16_t port)
-    : host(host), port(port), previous_tick(0), connected(false), Lamp<num_leds, pin>()
+SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid,
+        const char* wifi_password,
+        host_t host,
+        uint16_t port,
+        uint64_t key)
+    : host(host),
+    port(port),
+    previous_tick(0),
+    connected(false),
+    key(key),
+    Lamp<num_leds, pin>()
 {
     this->set_color(CRGB::Red);
     this->poweron(); //First color is red
     WiFi.mode(WIFI_STA);
-    WiFi.begin(wifi_ssid, password);
+    WiFi.begin(wifi_ssid, wifi_password);
 }
 
 
 template <int num_leds, int pin>
 void SharedLamp<num_leds, pin>::dump(LampState* state)
 {
+    Serial.print("uint64_t size: ");
+    Serial.println(sizeof(this->key));
+
+    state->key = this->key;
     state->power = this->power;
     state->color = this->current_color;
 }
@@ -93,6 +109,9 @@ bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
     }
 
 
+    char* key_data = (char*)&state->key;
+    for (int i = 0; i < 8; ++i)
+        this->server.write(key_data[i]);
     this->server.write(state->power);
     this->server.write(state->color);
 
