@@ -106,13 +106,14 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
 {
     transfer_start = millis();
 
+    Serial.println("Trying to receive state");
     wait(this->server.available()); //TODO: maybe rewrite this
     state->power = this->server.read();
 
     wait(this->server.available());
     state->color = this->server.read();
 
-    Serial.println("Receive state");
+    Serial.println("Received state");
     return true;
 
 }
@@ -153,7 +154,6 @@ void SharedLamp<num_leds, pin>::tick()
 
     this->load(&state);
 FIN_CONN:
-    this->server.stop();
-
+    return;
 }
 #endif
