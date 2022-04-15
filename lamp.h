@@ -1,5 +1,6 @@
 #ifndef LAMP_HPP_INCLUDED
 #define LAMP_HPP_INCLUDED
+
 #define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #include <stdint.h>
@@ -40,8 +41,10 @@ class Lamp {
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::redraw()
 {
-    if (!power)
+    if (!power) {
+        this->poweroff();
         return;
+    }
 
     Serial.print("Redraw: ");
     Serial.println(current_color);
