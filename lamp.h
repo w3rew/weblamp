@@ -5,15 +5,8 @@
 #include <FastLED.h>
 #include <stdint.h>
 
-const CRGB USE_COLORS[] = {
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Yellow,
-    CRGB::Pink,
-    CRGB::Turquoise
-};
+#define SATURATION 255
 
-#define USE_COLORS_LEN sizeof(USE_COLORS) / sizeof((USE_COLORS)[0])
 
 template <int num_leds, int pin>
 class Lamp {
@@ -29,7 +22,7 @@ class Lamp {
         Lamp();
 
         void set_brightness(uint8_t);
-        void set_color(CRGB);
+        void set_color(uint8_t);
         void poweroff();
         void poweron();
         void toggle_power();
@@ -46,17 +39,19 @@ void Lamp<num_leds, pin>::redraw()
         return;
     }
 
+#ifdef DEBUG
     Serial.print("Redraw: ");
     Serial.println(current_color);
-    FastLED.setBrightness(brightness);
+#endif
     for (uint8_t i = 0; i < num_leds; ++i) {
-        leds[i] = USE_COLORS[current_color];
-        raw_leds[i] = leds[i];
+        raw_leds[i] = CHSV(current_color, SATURATION, brightness);
+#ifdef DEBUG
         Serial.print(raw_leds[i].r);
         Serial.print(" ");
         Serial.print(raw_leds[i].g);
         Serial.print(" ");
         Serial.println(raw_leds[i].b);
+#endif
     }
     FastLED.show();
 }
@@ -76,9 +71,9 @@ void Lamp<num_leds, pin>::set_brightness(uint8_t brightness)
 }
 
 template <int num_leds, int pin>
-void Lamp<num_leds, pin>::set_color(CRGB color)
+void Lamp<num_leds, pin>::set_color(uint8_t color)
 {
-    fill_solid(leds, num_leds, color);
+    current_color = color;
     redraw();
 }
 
@@ -117,9 +112,10 @@ void Lamp<num_leds, pin>::cycle_brightness()
 template <int num_leds, int pin>
 void Lamp<num_leds, pin>::cycle_colors()
 {
+#ifdef DEBUG
     Serial.println("Cycle colors!");
-    ++current_color;
-    current_color %= USE_COLORS_LEN;
+#endif
+    current_color = random8();
     redraw();
 }
 

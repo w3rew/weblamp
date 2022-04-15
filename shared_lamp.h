@@ -43,7 +43,7 @@ class SharedLamp : public Lamp<num_leds, pin>
                 uint64_t key);
 
         void dump(LampState* state);
-        bool load(const LampState* state);
+        void load(const LampState* state);
         bool send_state(const LampState* state);
         bool receive_state(LampState* state);
 };
@@ -61,7 +61,7 @@ SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid,
     key(key),
     Lamp<num_leds, pin>()
 {
-    this->set_color(CRGB::Red);
+    this->set_color(HSVHue::HUE_RED);
     this->poweron(); //First color is red
     WiFi.mode(WIFI_STA);
     WiFi.begin(wifi_ssid, wifi_password);
@@ -71,8 +71,10 @@ SharedLamp<num_leds, pin>::SharedLamp(const char* wifi_ssid,
 template <int num_leds, int pin>
 void SharedLamp<num_leds, pin>::dump(LampState* state)
 {
+#ifdef DEBUG
     Serial.print("uint64_t size: ");
     Serial.println(sizeof(this->key));
+#endif
 
     state->key = this->key;
     state->power = this->power;
@@ -80,19 +82,17 @@ void SharedLamp<num_leds, pin>::dump(LampState* state)
 }
 
 template <int num_leds, int pin>
-bool SharedLamp<num_leds, pin>::load(const LampState* state)
+void SharedLamp<num_leds, pin>::load(const LampState* state)
 {
-    if (state->color < USE_COLORS_LEN) {
+#ifdef DEBUG
         Serial.print("Load: ");
         Serial.print(state->power);
         Serial.print(" ");
         Serial.println(state->color);
+#endif
         this->power = state->power;
         this->current_color = state->color;
         this->redraw();
-        return true;
-    }
-    return false;
 }
 
 template <int num_leds, int pin>
@@ -101,9 +101,13 @@ bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
     transfer_start = millis();
     this->server.flush();
 
+#ifdef DEBUG
     Serial.println("Trying to send state");
+#endif
     if (!this->server.connected()) {
+#ifdef DEBUG
         Serial.println("Not connected, will connect and retry again");
+#endif
         this->server.connect(host.arr, port);
         return false;
     }
@@ -115,8 +119,9 @@ bool SharedLamp<num_leds, pin>::send_state(const LampState* state)
     this->server.write(state->power);
     this->server.write(state->color);
 
-
+#ifdef DEBUG
     Serial.println("Sent state");
+#endif
     return true;
 }
 
@@ -125,14 +130,18 @@ bool SharedLamp<num_leds, pin>::receive_state(LampState* state)
 {
     transfer_start = millis();
 
+#ifdef DEBUG
     Serial.println("Trying to receive state");
+#endif
     wait(this->server.available()); //TODO: maybe rewrite this
     state->power = this->server.read();
 
     wait(this->server.available());
     state->color = this->server.read();
 
+#ifdef DEBUG
     Serial.println("Received state");
+#endif
     return true;
 
 }
@@ -145,14 +154,16 @@ void SharedLamp<num_leds, pin>::tick()
         return;
 
     previous_tick = millis();
+#ifdef DEBUG
     Serial.println("Tick!");
     Serial.print("Wifi status: ");
     Serial.println(WiFi.status());
+#endif
 
 
     if (WiFi.status() == WL_CONNECTED) {
         if (!connected) {
-            this->set_color(CRGB::Green);
+            this->set_color(HSVHue::HUE_GREEN);
             connected = true;
         }
     } else
@@ -162,12 +173,16 @@ void SharedLamp<num_leds, pin>::tick()
     this->dump(&state);
 
     if (!this->send_state(&state)) {
+#ifdef DEBUG
         Serial.println("Failed to send state!");
+#endif
         goto FIN_CONN;
     }
 
     if (!this->receive_state(&state)) {
+#ifdef DEBUG
         Serial.println("Failed to receive state!");
+#endif
         goto FIN_CONN;
     }
 

@@ -58,7 +58,9 @@ void EventHandler<num_leds, led_pin>::key_holds()
 {
     unsigned long ms = millis();
     if (ms - long_press_prev_ms > LONG_PRESS_COOLDOWN) {
+#ifdef DEBUG
         Serial.println("Key holds");
+#endif
         long_press_prev_ms = ms;
         lamp->cycle_brightness();
     }
